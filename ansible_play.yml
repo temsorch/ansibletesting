@@ -128,7 +128,7 @@
 
           - debug: var=sshd_time_restarted.stdout_lines
 
-          - name: ==========================Checking if SSH daemon has been restarted==========================
+          - name: ==========================Checking if firewalld daemon has been restarted==========================
             shell: "systemctl show firewalld | grep ExecMainStartTimestamp="
             register: firewalld_time_restarted
 
