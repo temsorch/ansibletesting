@@ -1,0 +1,82 @@
+---
+- name: wsr ansible
+  hosts: proj
+  become: yes
+  
+  vars: 
+   ssh_src: /ansible/sshd_config
+   ssh_dest: /etc/ssh/sshd_config
+   key_source: /ansible/key.pub
+
+  tasks:
+   - name: selinux disable
+     selinux: state=disabled
+
+   - name: update all packages
+     yum: name=* state=latest update_cache=yes update_only=yes
+
+   - name: yum-utils install
+     yum: name=yum-utils state=latest
+
+   - name: add repo docker-ce
+     shell: yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+
+   - name: activate repo.
+     shell: yum-config-manager --enable docker-ce-nightly
+  
+   - name: activate repo..
+     shell: yum-config-manager --enable docker-ce-test
+
+   - name: install docker
+     yum: name=docker-ce state=latest
+  
+   - name: install curl
+     yum: name=curl state=latest
+
+   - name: start firewall 
+     service: name=firewalld state=started enabled=yes
+
+   - name: allow port 80
+     firewalld: port=80/tcp permanent=true state=enabled zone=public
+
+   - name: allow port 8080
+     firewalld: port=8080/tcp permanent=true state=enabled zone=public
+  
+   - name: allow port 1834
+     firewalld: port=1834/tcp permanent=true state=enabled zone=public
+
+   - name: sshd config edit
+     copy: src={{ ssh_src }} dest={{ ssh_dest }} mode=0555
+
+   - name: add user webdeveloper
+     user: name=Webdeveloper shell=/bin/bash password=S52we9V6QTp7v
+
+   - name: add user devops
+     user: name=Devopsengineer shell=/bin/bash password=dHy6sKGHsj2T
+
+   - name: add user projmanager
+     user: name=Projectmanager shell=/bin/bash password=oP92ugMSaCbe
+
+   - name: fold for webd
+     file: path=/home/Webdeveloper/.ssh state=directory
+
+   - name: fold for devops
+     file: path=/home/Devopsengineer/.ssh state=directory
+
+   - name: fold for manager
+     file: path=/home/Projectmanager/.ssh state=directory
+
+   - name: ssh loading.
+     copy: src={{ key_source }} dest=/home/Webdeveloper/.ssh/authorized_keys mode=0620
+
+   - name: ssh loading..
+     copy: src={{ key_source }} dest=/home/Devopsengineer/.ssh/authorized_keys mode=0620
+
+   - name: ssh loading...
+     copy: src={{ key_source }} dest=/home/Projectmanager/.ssh/authorized_keys mode=0620
+
+   - name: reboot
+     command: /sbin/reboot
+     async: 0
+     poll: 0
+     ignore_errors: true
